@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-export default function AuthCallbackPage() {
+export default function Callback() {
   const router = useRouter()
   const [status, setStatus] = useState('Processing authentication...')
 
@@ -27,8 +27,7 @@ export default function AuthCallbackPage() {
         } else if (session) {
           console.log('✅ Session successfully restored!')
           setStatus('Authentication successful! Redirecting...')
-          // ✅ Session successfully restored!
-          router.push('/') // redirect to welcome page
+          router.push('/')
         } else {
           console.log('❌ No session found')
           setStatus('No session found. Redirecting to login...')

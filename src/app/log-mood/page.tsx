@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-// import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 const emojis = ['😄', '🙂', '😐', '😔', '😢']
@@ -10,7 +10,20 @@ export default function LogMoodPage() {
   const [selected, setSelected] = useState('')
   const [note, setNote] = useState('')
   const [message, setMessage] = useState('')
-//   const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      setLoading(false)
+    }
+    checkAuth()
+  }, [router])
 
   const handleSubmit = async () => {
     const {
@@ -35,6 +48,8 @@ export default function LogMoodPage() {
       setNote('')
     }
   }
+
+  if (loading) return <div className="p-6">Loading...</div>
 
   return (
     <div className="p-6 space-y-6 max-w-xl mx-auto">
