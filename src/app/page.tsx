@@ -49,20 +49,28 @@ export default function HomePage() {
   };
 
   return (
-    <div className="text-center p-4">
-      <h1>Welcome back!</h1>
-      <div className="space-y-4">
-        <a href="/dashboard" className="btn btn-primary">Go to Dashboard</a>
-        <br />
-        <button onClick={handleLogout} className="btn btn-secondary">
-          Logout
-        </button>
-        <br />
-        {process.env.NODE_ENV === 'development' && (
-          <button onClick={handleClearAuth} className="btn btn-warning">
-            Clear All Auth Data (Dev Only)
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-800 mb-6">Welcome to MindMate</h1>
+        <p className="text-xl text-gray-600 mb-8">
+          Track your mental health journey with our intuitive mood tracking app
+        </p>
+        
+        <div className="space-y-4">
+          <a href="/dashboard" className="inline-block bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition-colors">
+            Go to Dashboard
+          </a>
+          <br />
+          <button onClick={handleLogout} className="bg-gray-500 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors">
+            Logout
           </button>
-        )}
+          <br />
+          {process.env.NODE_ENV === 'development' && (
+            <button onClick={handleClearAuth} className="bg-yellow-500 text-white px-6 py-3 rounded-md hover:bg-yellow-600 transition-colors">
+              Clear All Auth Data (Dev Only)
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

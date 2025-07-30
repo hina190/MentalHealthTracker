@@ -1,6 +1,7 @@
 // src/app/layout.tsx
 import './globals.css'
 import { ReactNode } from 'react'
+import Navbar from '@/components/Navbar'
 
 export const metadata = {
   title: 'MindMate',
@@ -10,7 +11,12 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Navbar />
+        <main>
+          {children}
+        </main>
+      </body>
     </html>
   )
 }
