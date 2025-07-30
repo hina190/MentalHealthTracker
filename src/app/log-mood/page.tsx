@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 const emojis = ['😄', '🙂', '😐', '😔', '😢']
@@ -10,7 +10,7 @@ export default function LogMoodPage() {
   const [selected, setSelected] = useState('')
   const [note, setNote] = useState('')
   const [message, setMessage] = useState('')
-  const router = useRouter()
+//   const router = useRouter()
 
   const handleSubmit = async () => {
     const {
