@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase'
 
 export default function TestEmailPage() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -37,6 +39,39 @@ export default function TestEmailPage() {
     }
   }
 
+  const testSignup = async () => {
+    if (!email || !password || !name) {
+      setResult('Please fill in all fields')
+      return
+    }
+
+    setLoading(true)
+    setResult('Creating account...')
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+          emailRedirectTo: `${window.location.origin}/welcome`,
+        },
+      })
+
+      if (error) {
+        setResult(`Error: ${error.message}`)
+      } else {
+        setResult(`Signup successful! Check your email for verification. User ID: ${data.user?.id}`)
+      }
+    } catch (err) {
+      setResult(`Error: ${err}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const checkConfig = () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -57,6 +92,17 @@ export default function TestEmailPage() {
       
       <div className="space-y-4">
         <div>
+          <label className="block text-sm font-medium mb-1">Name:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Your name"
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-1">Email:</label>
           <input
             type="email"
@@ -64,6 +110,17 @@ export default function TestEmailPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full p-2 border rounded"
             placeholder="your-email@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Your password"
           />
         </div>
         
@@ -74,6 +131,14 @@ export default function TestEmailPage() {
             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50"
           >
             {loading ? 'Sending...' : 'Test Magic Link'}
+          </button>
+          
+          <button
+            onClick={testSignup}
+            disabled={loading}
+            className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:opacity-50"
+          >
+            {loading ? 'Creating...' : 'Test Signup'}
           </button>
           
           <button
