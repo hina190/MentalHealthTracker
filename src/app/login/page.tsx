@@ -8,7 +8,13 @@ export default function LoginPage() {
   const [message, setMessage] = useState('');
 
   const handleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: 'http://localhost:3000/auth/callback', // 👈 important!
+        },
+      });
+      
     if (error) {
       setMessage('Error sending magic link');
     } else {
