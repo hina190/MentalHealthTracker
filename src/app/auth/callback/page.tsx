@@ -30,9 +30,19 @@ export default function AuthCallbackPage() {
           console.log('✅ Session successfully restored!')
           setStatus('Authentication successful! Redirecting...')
           
+          // Check if this is a new user (first time signing in)
+          const user = data.session.user
+          const isNewUser = user.created_at === user.last_sign_in_at
+          
           // Wait a moment for the session to be fully established
           setTimeout(() => {
-            router.push('/dashboard')
+            if (isNewUser) {
+              // New user - redirect to welcome page
+              router.push('/welcome')
+            } else {
+              // Existing user - redirect to dashboard
+              router.push('/dashboard')
+            }
           }, 1000)
         } else {
           console.log('❌ No session found, trying to handle URL...')
@@ -47,7 +57,17 @@ export default function AuthCallbackPage() {
           } else if (urlData.session) {
             console.log('✅ Session found after URL handling!')
             setStatus('Authentication successful! Redirecting...')
-            setTimeout(() => router.push('/dashboard'), 1000)
+            
+            const user = urlData.session.user
+            const isNewUser = user.created_at === user.last_sign_in_at
+            
+            setTimeout(() => {
+              if (isNewUser) {
+                router.push('/welcome')
+              } else {
+                router.push('/dashboard')
+              }
+            }, 1000)
           } else {
             console.log('❌ Still no session found')
             setStatus('No session found. Redirecting to login...')

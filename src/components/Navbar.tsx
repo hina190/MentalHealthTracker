@@ -2,11 +2,10 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import SignupModal from './SignupModal'
 import LoginModal from './LoginModal'
+import Link from 'next/link'
 
 export default function Navbar() {
-  const [showSignup, setShowSignup] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const { user, signOut } = useAuth()
 
@@ -21,29 +20,29 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-16">
             {/* Logo/Brand */}
             <div className="flex items-center">
-              <a href="/" className="text-xl font-bold text-gray-800">
+              <Link href="/" className="text-xl font-bold text-gray-800">
                 MindMate
-              </a>
+              </Link>
             </div>
 
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Home
-              </a>
-              <a href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-gray-900 transition-colors">
                 About
-              </a>
-              <a href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
+              </Link>
+              <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Contact
-              </a>
-              <a href="/support" className="text-gray-600 hover:text-gray-900 transition-colors">
+              </Link>
+              <Link href="/support" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Support
-              </a>
+              </Link>
               {user && (
-                <a href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Dashboard
-                </a>
+                </Link>
               )}
             </div>
 
@@ -69,12 +68,12 @@ export default function Navbar() {
                   >
                     Login
                   </button>
-                  <button
-                    onClick={() => setShowSignup(true)}
+                  <Link
+                    href="/signup"
                     className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                   >
                     Sign Up
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -82,16 +81,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Modals */}
-      {showSignup && (
-        <SignupModal 
-          onClose={() => setShowSignup(false)}
-          onSuccess={() => {
-            setShowSignup(false)
-          }}
-        />
-      )}
-
+      {/* Login Modal */}
       {showLogin && (
         <LoginModal 
           onClose={() => setShowLogin(false)}

@@ -8,7 +8,8 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
-  signIn: (email: string) => Promise<{ error: any }>
+  signIn: (email: string, password?: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
 }
 
@@ -43,14 +44,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  const signIn = async (email: string, password?: string) => {
+    if (password) {
+      // Password-based login
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      return { error }
+    } else {
+      // Magic link login (for existing users)
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      return { error }
+    }
+  }
+
+  const signUp = async (email: string, password: string, name: string) => {
+    // Create user with password and metadata
+    const { data, error } = await supabase.auth.signUp({
       email,
+      password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          name: name,
+        },
+        emailRedirectTo: `${window.location.origin}/welcome`,
       },
     })
-    return { error }
+
+    if (error) {
+      return { error }
+    }
+
+    // Store additional user data in database
+    if (data.user) {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: data.user.id,
+            email: email,
+            name: name,
+            password: password, // Note: This should be hashed in production
+          }),
+        })
+
+        if (!response.ok) {
+          console.error('Failed to store user data')
+        }
+      } catch (err) {
+        console.error('Error storing user data:', err)
+      }
+    }
+
+    return { error: null }
   }
 
   const signOut = async () => {
@@ -62,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     signIn,
+    signUp,
     signOut,
   }
 
