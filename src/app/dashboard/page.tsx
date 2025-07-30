@@ -10,11 +10,14 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement)
 interface MoodEntry {
     mood: string
     date: string
+    emoji: string
     note?: string
   }
   
+  
 export default function DashboardPage() {
   const [data, setData] = useState<MoodEntry[]>([])
+
 
 
   useEffect(() => {
