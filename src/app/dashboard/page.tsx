@@ -7,8 +7,15 @@ import { Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement)
 
+interface MoodEntry {
+    mood: string
+    date: string
+    note?: string
+  }
+  
 export default function DashboardPage() {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<MoodEntry[]>([])
+
 
   useEffect(() => {
     const getData = async () => {
