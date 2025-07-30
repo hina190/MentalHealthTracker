@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 
 interface SignupModalProps {
   onClose: () => void
@@ -12,13 +12,12 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     acceptTerms: false
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,14 +26,8 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
     setMessage('')
 
     // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    if (!formData.email) {
+      setError('Please enter your email address')
       setLoading(false)
       return
     }
@@ -46,46 +39,19 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
     }
 
     try {
-      // Sign up with Supabase
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name
-          }
-        }
-      })
-
-      if (signUpError) {
-        setError(signUpError.message)
+      // Use the same signIn method as login (magic link)
+      const { error: signInError } = await signIn(formData.email)
+      
+      if (signInError) {
+        setError(signInError.message)
         setLoading(false)
         return
       }
 
-      // Store additional user data in your database
-      if (data.user) {
-        const response = await fetch('/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: data.user.id,
-            name: formData.name,
-            email: formData.email
-          }),
-        })
-
-        if (!response.ok) {
-          console.error('Failed to store user data')
-        }
-      }
-
-      setMessage('Account created successfully! Please check your email to verify your account.')
+      setMessage('Check your email for the signup link! Please verify your email to complete your account setup.')
       setTimeout(() => {
         onSuccess()
-      }, 2000)
+      }, 3000)
 
     } catch (err) {
       setError('An unexpected error occurred')
@@ -105,12 +71,12 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Sign Up</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
           >
             ×
           </button>
@@ -118,75 +84,48 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
             </label>
             <input
               type="text"
+              id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter your full name"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
             </label>
             <input
               type="email"
+              id="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your email address"
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Confirm your password"
             />
           </div>
 
           <div className="flex items-center">
             <input
               type="checkbox"
+              id="acceptTerms"
               name="acceptTerms"
               checked={formData.acceptTerms}
               onChange={handleInputChange}
-              required
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              required
             />
-            <label className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
               I agree to the{' '}
               <a href="/terms" className="text-blue-600 hover:text-blue-500">
                 Terms and Conditions
@@ -209,11 +148,23 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Creating Account...' : 'Sign Up'}
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Already have an account?{' '}
+            <button
+              onClick={onClose}
+              className="text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Sign in here
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )

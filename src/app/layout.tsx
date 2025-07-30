@@ -2,6 +2,7 @@
 import './globals.css'
 import { ReactNode } from 'react'
 import Navbar from '@/components/Navbar'
+import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata = {
   title: 'MindMate',
@@ -12,10 +13,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Navbar />
-        <main>
-          {children}
-        </main>
+        <AuthProvider>
+          <Navbar />
+          <main>
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth-context'
 
 interface LoginModalProps {
   onClose: () => void
@@ -9,33 +9,37 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ onClose, onSuccess }: LoginModalProps) {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+  const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setMessage('')
+
+    if (!email) {
+      setError('Please enter your email address')
+      setLoading(false)
+      return
+    }
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
-
+      const { error: signInError } = await signIn(email)
+      
       if (signInError) {
         setError(signInError.message)
         setLoading(false)
         return
       }
 
-      if (data.user) {
+      setMessage('Check your email for the login link!')
+      setTimeout(() => {
         onSuccess()
-      }
+      }, 3000)
 
     } catch (err) {
       setError('An unexpected error occurred')
@@ -45,22 +49,14 @@ export default function LoginModal({ onClose, onSuccess }: LoginModalProps) {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Login</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Sign In</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
           >
             ×
           </button>
@@ -68,32 +64,19 @@ export default function LoginModal({ onClose, onSuccess }: LoginModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email Address
             </label>
             <input
               type="email"
+              id="email"
               name="email"
-              value={formData.email}
-              onChange={handleInputChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your email address"
+              disabled={loading}
             />
           </div>
 
@@ -103,14 +86,32 @@ export default function LoginModal({ onClose, onSuccess }: LoginModalProps) {
             </div>
           )}
 
+          {message && (
+            <div className="text-green-600 text-sm bg-green-50 p-3 rounded-md">
+              {message}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Sending...' : 'Send Magic Link'}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{' '}
+            <button
+              onClick={onClose}
+              className="text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Sign up here
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )

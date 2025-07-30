@@ -1,44 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import SignupModal from './SignupModal'
 import LoginModal from './LoginModal'
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setIsLoggedIn(true)
-        setUser(user)
-      }
-    }
-    checkAuth()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setIsLoggedIn(true)
-        setUser(session.user)
-      } else {
-        setIsLoggedIn(false)
-        setUser(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  const { user, signOut } = useAuth()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setIsLoggedIn(false)
-    setUser(null)
+    await signOut()
   }
 
   return (
@@ -67,14 +40,19 @@ export default function Navbar() {
               <a href="/support" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Support
               </a>
+              {user && (
+                <a href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Dashboard
+                </a>
+              )}
             </div>
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
-              {isLoggedIn ? (
+              {user ? (
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-600">
-                    Welcome, {user?.email}
+                    Welcome, {user.email}
                   </span>
                   <button
                     onClick={handleLogout}
@@ -110,7 +88,6 @@ export default function Navbar() {
           onClose={() => setShowSignup(false)}
           onSuccess={() => {
             setShowSignup(false)
-            setIsLoggedIn(true)
           }}
         />
       )}
@@ -120,7 +97,6 @@ export default function Navbar() {
           onClose={() => setShowLogin(false)}
           onSuccess={() => {
             setShowLogin(false)
-            setIsLoggedIn(true)
           }}
         />
       )}

@@ -14,25 +14,45 @@ export default function AuthCallbackPage() {
         console.log('🔐 Starting authentication callback...')
         console.log('🔗 Current URL:', window.location.href)
         
-        // With detectSessionInUrl enabled, we can just get the session
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Handle the auth callback
+        const { data, error } = await supabase.auth.getSession()
         
-        console.log('🔐 Auth result:', { session, error })
+        console.log('🔐 Auth result:', { data, error })
         
         if (error) {
           console.error('❌ Error getting session:', error.message)
           setStatus(`Error: ${error.message}`)
-          // Redirect to login on error
           setTimeout(() => router.push('/login'), 3000)
-        } else if (session) {
+          return
+        }
+        
+        if (data.session) {
           console.log('✅ Session successfully restored!')
           setStatus('Authentication successful! Redirecting...')
-          // ✅ Session successfully restored!
-          router.push('/') // redirect to welcome page
+          
+          // Wait a moment for the session to be fully established
+          setTimeout(() => {
+            router.push('/dashboard')
+          }, 1000)
         } else {
-          console.log('❌ No session found')
-          setStatus('No session found. Redirecting to login...')
-          setTimeout(() => router.push('/login'), 3000)
+          console.log('❌ No session found, trying to handle URL...')
+          
+          // Try to handle the URL manually if session wasn't detected
+          const { data: urlData, error: urlError } = await supabase.auth.getSession()
+          
+          if (urlError) {
+            console.error('❌ URL handling error:', urlError)
+            setStatus('Authentication failed. Please try again.')
+            setTimeout(() => router.push('/login'), 3000)
+          } else if (urlData.session) {
+            console.log('✅ Session found after URL handling!')
+            setStatus('Authentication successful! Redirecting...')
+            setTimeout(() => router.push('/dashboard'), 1000)
+          } else {
+            console.log('❌ Still no session found')
+            setStatus('No session found. Redirecting to login...')
+            setTimeout(() => router.push('/login'), 3000)
+          }
         }
       } catch (err) {
         console.error('❌ Unexpected error:', err)
@@ -45,9 +65,16 @@ export default function AuthCallbackPage() {
   }, [router])
 
   return (
-    <div className="p-4 text-center">
-      <p>{status}</p>
-      <p className="text-sm text-gray-500 mt-2">Please wait...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Authenticating...
+          </h2>
+          <p className="text-gray-600">{status}</p>
+        </div>
+      </div>
     </div>
   )
 }
