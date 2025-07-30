@@ -81,29 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error }
     }
 
-    // Store additional user data in database
-    if (data.user) {
-      try {
-        const response = await fetch('/api/users', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: data.user.id,
-            email: email,
-            name: name,
-            password: password, // Note: This should be hashed in production
-          }),
-        })
-
-        if (!response.ok) {
-          console.error('Failed to store user data')
-        }
-      } catch (err) {
-        console.error('Error storing user data:', err)
-      }
-    }
+    // Note: We'll store user data in Supabase instead of MongoDB
+    // The user data will be stored in Supabase auth.users table
+    // Additional data is stored in user_metadata
 
     return { error: null }
   }

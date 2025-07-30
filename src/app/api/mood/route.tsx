@@ -1,12 +1,45 @@
-import { connectDB } from '@/lib/mongodb'
-import { Mood } from '@/models/Mood'
+import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const { email, emoji, note } = body
+  try {
+    const body = await req.json()
+    const { email, emoji, note } = body
 
-  await connectDB()
-  const mood = await Mood.create({ email, emoji, note })
-  return NextResponse.json(mood)
+    if (!email || !emoji) {
+      return NextResponse.json(
+        { error: 'Email and emoji are required' },
+        { status: 400 }
+      )
+    }
+
+    // Insert mood data into Supabase
+    const { data, error } = await supabase
+      .from('moods')
+      .insert([
+        {
+          email,
+          emoji,
+          note,
+          date: new Date().toISOString()
+        }
+      ])
+      .select()
+
+    if (error) {
+      console.error('Error creating mood:', error)
+      return NextResponse.json(
+        { error: 'Failed to create mood' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(data[0])
+  } catch (error) {
+    console.error('Error in mood API:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }
