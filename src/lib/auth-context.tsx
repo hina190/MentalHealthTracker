@@ -64,29 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, name: string) => {
-    // Create user with password and metadata
-    const { data, error } = await supabase.auth.signUp({
+  const signUp = async (email: string, _password: string, name: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
       options: {
-        data: {
-          name: name,
-        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          name,
+        },
       },
     })
-
-    if (error) {
-      return { error }
-    }
-
-    // Note: We'll store user data in Supabase instead of MongoDB
-    // The user data will be stored in Supabase auth.users table
-    // Additional data is stored in user_metadata
-
-    return { error: null }
+  
+    return { error }
   }
+  
 
   const signOut = async () => {
     await supabase.auth.signOut()
