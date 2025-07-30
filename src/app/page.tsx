@@ -1,31 +1,31 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data, error } = await supabase.auth.getUser()
+      const { data, error } = await supabase.auth.getUser();
 
-      console.log("🔐 User data:", data)
-      console.log("❌ Error:", error)
+      console.log("🔐 User data:", data);
+      console.log("❌ Error:", error);
 
       if (data?.user) {
-        setIsLoggedIn(true)
+        setIsLoggedIn(true);
       }
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
-  if (loading) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div className="text-center p-4">
@@ -38,5 +38,5 @@ export default function HomePage() {
         <a href="/login" className="btn btn-primary">Go to Login</a>
       )}
     </div>
-  )
+  );
 }
