@@ -1,15 +1,18 @@
-// context/auth-context.tsx
 'use client'
 
-import { supabase } from '@/lib/supabase'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']
-type User = Session['user'] | null
+interface User {
+  id: string
+  email: string
+  user_metadata: {
+    name: string
+  }
+}
 
 interface AuthContextType {
-  user: User
+  user: User | null
   loading: boolean
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
