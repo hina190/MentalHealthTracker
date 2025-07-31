@@ -24,29 +24,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter()
 
   useEffect(() => {
-    // Check for existing session
-    const checkSession = async () => {
+    // Check for existing user in localStorage
+    const savedUser = localStorage.getItem('mindmate_user')
+    if (savedUser) {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setUser(session?.user ?? null)
+        const userData = JSON.parse(savedUser)
+        setUser(userData)
       } catch (error) {
-        console.error('Error checking session:', error)
-      } finally {
-        setLoading(false)
+        console.error('Error parsing saved user:', error)
+        localStorage.removeItem('mindmate_user')
       }
     }
-
-    checkSession()
-
-    // Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => {
-      listener.subscription.unsubscribe()
-    }
+    setLoading(false)
   }, [])
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -88,15 +77,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: { message: data.error } }
       }
 
-      // Create a minimal Supabase session for frontend state
-      // This is just for UI state management
-      const mockUser = {
+      // Create a user object for frontend state management
+      const userObject = {
         id: data.user.id,
         email: data.user.email,
         user_metadata: { name: data.user.name }
       }
 
-      setUser(mockUser as any)
+      // Save to localStorage for persistence
+      localStorage.setItem('mindmate_user', JSON.stringify(userObject))
+      setUser(userObject as any)
 
       return { error: null }
     } catch (error) {
@@ -107,7 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut()
+      // Clear the user state and localStorage
+      localStorage.removeItem('mindmate_user')
       setUser(null)
       router.push('/')
     } catch (error) {

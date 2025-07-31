@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() })
+    
     if (!user) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password)
+    
     if (!isPasswordValid) {
       // Increment login attempts
       await user.incLoginAttempts()
@@ -59,22 +61,8 @@ export async function POST(request: NextRequest) {
     // Reset login attempts on successful login
     await user.resetLoginAttempts()
 
-    // Create Supabase session (for frontend auth state)
-    const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithPassword({
-      email,
-      password: 'temp-password-for-supabase' // We'll use a temporary password for Supabase
-    })
-
-    if (supabaseError) {
-      console.error('Supabase auth error:', supabaseError)
-      // Continue anyway since we're using MongoDB for actual auth
-    }
-
-    // Update user's Supabase ID if we got one
-    if (supabaseData?.user?.id && !user.supabaseId) {
-      user.supabaseId = supabaseData.user.id
-      await user.save()
-    }
+    // For now, we'll skip Supabase authentication since we're using MongoDB for auth
+    // The frontend will handle the session state
 
     return NextResponse.json({
       message: 'Login successful',
