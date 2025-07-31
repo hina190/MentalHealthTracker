@@ -64,28 +64,31 @@ UserSchema.pre('save', function(next) {
 
 // Virtual for checking if account is locked
 UserSchema.virtual('isLocked').get(function() {
-  return !!(this.lockUntil && this.lockUntil > Date.now())
+  return !!(this.lockUntil && this.lockUntil.getTime() > Date.now())
 })
 
-// Method to increment login attempts
-UserSchema.methods.incLoginAttempts = function() {
-  // If we have a previous lock that has expired, restart at 1
-  if (this.lockUntil && this.lockUntil < Date.now()) {
-    return this.updateOne({
-      $unset: { lockUntil: 1 },
-      $set: { loginAttempts: 1 }
-    })
+  // Method to increment login attempts
+  UserSchema.methods.incLoginAttempts = function() {
+    // If we have a previous lock that has expired, restart at 1
+    if (this.lockUntil && this.lockUntil < Date.now()) {
+      return this.updateOne({
+        $unset: { lockUntil: 1 },
+        $set: { loginAttempts: 1 }
+      })
+    }
+    
+    let updates: any = { $inc: { loginAttempts: 1 } }
+    
+    // Lock account after 5 failed attempts for 2 hours
+    if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
+      updates = {
+        ...updates,
+        $set: { lockUntil: Date.now() + 2 * 60 * 60 * 1000 }
+      }
+    }
+    
+    return this.updateOne(updates)
   }
-  
-  const updates = { $inc: { loginAttempts: 1 } }
-  
-  // Lock account after 5 failed attempts for 2 hours
-  if (this.loginAttempts + 1 >= 5 && !this.isLocked) {
-    updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 }
-  }
-  
-  return this.updateOne(updates)
-}
 
 // Method to reset login attempts
 UserSchema.methods.resetLoginAttempts = function() {
