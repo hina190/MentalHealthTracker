@@ -1,18 +1,18 @@
 import nodemailer from 'nodemailer'
 
-// Create transporter with better error handling for serverless environments
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: 'gmail',
+export const sendVerificationEmail = async (email: string, token: string, name: string) => {
+  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${token}`
+  
+  // Create transporter for each email (better for serverless)
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     }
   })
-}
-
-export const sendVerificationEmail = async (email: string, token: string, name: string) => {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${token}`
   
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -90,7 +90,6 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
   }
 
   try {
-    const transporter = createTransporter()
     await transporter.sendMail(mailOptions)
     return { success: true }
   } catch (error) {
