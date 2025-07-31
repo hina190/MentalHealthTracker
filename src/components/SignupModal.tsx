@@ -63,7 +63,7 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
 
       setMessage('Account created successfully! Please check your email to verify your account.')
       setTimeout(() => {
-        onSuccess()
+        onClose()
       }, 3000)
 
     } catch (err) {

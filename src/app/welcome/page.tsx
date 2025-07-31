@@ -9,14 +9,23 @@ export default function WelcomePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [userName, setUserName] = useState('')
+  const [isVerified, setIsVerified] = useState(false)
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Check for verification parameters in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const verified = urlParams.get('verified')
+    const name = urlParams.get('name')
+
+    if (verified === 'true' && name) {
+      setIsVerified(true)
+      setUserName(decodeURIComponent(name))
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (!loading && !user) {
       router.push('/login')
       return
-    }
-
-    if (user) {
+    } else if (user) {
       // Try to get user name from user metadata or email
       const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
       setUserName(name)
@@ -52,7 +61,10 @@ export default function WelcomePage() {
               Welcome, {userName}! 🎉
             </h1>
             <p className="text-gray-600">
-              Your account has been successfully verified and you're now ready to start tracking your mental health journey.
+              {isVerified 
+                ? "Your account has been successfully verified and you're now ready to start tracking your mental health journey."
+                : "Welcome to MindMate! You're ready to start tracking your mental health journey."
+              }
             </p>
           </div>
 

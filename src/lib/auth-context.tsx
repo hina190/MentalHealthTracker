@@ -8,19 +8,40 @@ import { useRouter } from 'next/navigation'
 type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']
 type User = Session['user'] | null
 
-const AuthContext = createContext<any>(null)
+interface AuthContextType {
+  user: User
+  loading: boolean
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+      } catch (error) {
+        console.error('Error checking session:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
+    checkSession()
+
+    // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
+      setLoading(false)
     })
 
     return () => {
@@ -28,42 +49,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [])
 
-  const signUp = async (email: string, _password: string, name: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}`,
-        data: {
-          name,
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      },
-    })
-    console.log("Sending OTP to:", email)
+        body: JSON.stringify({ email, password, name }),
+      })
 
-    return { error }
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: { message: data.error } }
+      }
+
+      return { error: null }
+    } catch (error) {
+      console.error('Signup error:', error)
+      return { error: { message: 'An unexpected error occurred' } }
+    }
   }
 
-  const signIn = async (email: string, _password: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    return { error }
+  const signIn = async (email: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { error: { message: data.error } }
+      }
+
+      // Create a minimal Supabase session for frontend state
+      // This is just for UI state management
+      const mockUser = {
+        id: data.user.id,
+        email: data.user.email,
+        user_metadata: { name: data.user.name }
+      }
+
+      setUser(mockUser as any)
+
+      return { error: null }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { error: { message: 'An unexpected error occurred' } }
+    }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    router.push('/auth')
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      router.push('/')
+    } catch (error) {
+      console.error('Signout error:', error)
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
