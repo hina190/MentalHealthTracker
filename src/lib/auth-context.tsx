@@ -28,12 +28,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    supabase.auth.getUser().then(({ data }: { data: { user: User } }) => {
+      setUser(data.user);
     });
-
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (event: string, session: Session | null) => {
         setUser(session?.user ?? null);
       }
     );
