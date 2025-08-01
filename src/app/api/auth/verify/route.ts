@@ -1,41 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { connectDB } from '@/lib/mongodb'
+import { User } from '@/models/User'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { searchParams } = new URL(request.url)
+    const token = searchParams.get('token')
 
-    if (!email || !password) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Email and password required' },
+        { error: 'Verification token is required' },
         { status: 400 }
       )
     }
 
-    // Use Supabase auth to verify credentials
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    // Connect to MongoDB
+    await connectDB()
+
+    // Find user with this verification token
+    const user = await User.findOne({
+      emailVerificationToken: token,
+      emailVerificationExpires: { $gt: new Date() }
     })
 
-    if (error) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: 'Invalid or expired verification token' },
+        { status: 400 }
       )
     }
 
-    // Return user data without sensitive information
-    const userData = {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.user_metadata?.name || data.user.email?.split('@')[0],
-      createdAt: data.user.created_at,
-    }
+    // Mark user as verified
+    user.isEmailVerified = true
+    user.emailVerificationToken = null
+    user.emailVerificationExpires = null
+    await user.save()
 
-    return NextResponse.json(userData)
+    // Redirect to welcome page
+    const welcomeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/welcome?verified=true&name=${encodeURIComponent(user.name)}`
+    
+    return NextResponse.redirect(welcomeUrl)
+
   } catch (error) {
-    console.error('Error verifying user:', error)
+    console.error('Email verification error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
