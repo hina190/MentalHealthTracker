@@ -40,9 +40,26 @@ export default function Navbar() {
                 Support
               </Link>
               {user && (
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
-                  Dashboard
-                </Link>
+                <>
+                  <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Dashboard
+                  </Link>
+                  <Link href="/chatbot" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Chatbot
+                  </Link>
+                  <Link href="/mood-journal" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Mood Journal
+                  </Link>
+                  <Link href="/mood-analytics" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Mood Analytics
+                  </Link>
+                  <Link href="/reminders" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Reminders
+                  </Link>
+                  <Link href="/resources" className="text-gray-600 hover:text-gray-900 transition-colors">
+                    Resources
+                  </Link>
+                </>
               )}
             </div>
 
