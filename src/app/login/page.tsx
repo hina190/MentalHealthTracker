@@ -1,33 +1,39 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { supabase } from '@/lib/supabase'; // Make sure this path is correct
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase"; // Make sure this path is correct
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { signIn } = useAuth();
+  const [error, setError] = useState("");
+  const auth = useAuth();
+  const signIn = auth?.signIn;
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.email || !formData.password) {
-      setError('Please enter both email and password');
+      setError("Please enter both email and password");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
+      if (!signIn) {
+        setError("Authentication service unavailable.");
+        setLoading(false);
+        return;
+      }
       const { error } = await signIn(formData.email, formData.password);
 
       if (error) {
@@ -38,42 +44,42 @@ export default function LoginPage() {
 
       // Get session and user
       const {
-        data: { session }
+        data: { session },
       } = await supabase.auth.getSession();
 
       const user = session?.user;
 
       if (!user) {
-        setError('Login failed. Please try again.');
+        setError("Login failed. Please try again.");
         setLoading(false);
         return;
       }
 
       // Check if user exists in 'users' table
       const { data: existingUser, error: fetchError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (!existingUser) {
         // Add user to 'users' table
-        const { error: insertError } = await supabase.from('users').insert({
+        const { error: insertError } = await supabase.from("users").insert({
           id: user.id,
           email: user.email,
-          name: user.user_metadata?.name || '',
+          name: user.user_metadata?.name || "",
         });
 
         if (insertError) {
-          console.error('Failed to save user in DB:', insertError.message);
+          console.error("Failed to save user in DB:", insertError.message);
         }
       }
 
       // Redirect after successful login
-      router.push('/welcome');
+      router.push("/welcome");
     } catch (err) {
       console.error(err);
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -81,9 +87,9 @@ export default function LoginPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -95,8 +101,11 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Or{" "}
+            <Link
+              href="/signup"
+              className="font-medium text-indigo-600 hover:text-indigo-500"
+            >
               create a new account
             </Link>
           </p>
@@ -105,7 +114,10 @@ export default function LoginPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <input
@@ -123,7 +135,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -153,7 +168,7 @@ export default function LoginPage() {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </div>
 

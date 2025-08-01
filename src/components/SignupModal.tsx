@@ -1,86 +1,100 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 interface SignupModalProps {
-  onClose: () => void
-  onSuccess: () => void
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false
-  })
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-  const { signUp } = useAuth()
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    acceptTerms: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const auth = useAuth();
+  if (!auth) {
+    throw new Error("Auth context is not available");
+  }
+  const { signUp } = auth;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    setMessage('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
 
     // Validation
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in all fields')
-      setLoading(false)
-      return
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      setError("Please fill in all fields");
+      setLoading(false);
+      return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
     }
 
     if (!formData.acceptTerms) {
-      setError('Please accept the terms and conditions')
-      setLoading(false)
-      return
+      setError("Please accept the terms and conditions");
+      setLoading(false);
+      return;
     }
 
     try {
-      const { error: signUpError } = await signUp(formData.email, formData.password, formData.name)
-      
+      const { error: signUpError } = await signUp(
+        formData.email,
+        formData.password,
+        formData.name
+      );
+
       if (signUpError) {
-        setError(signUpError.message)
-        setLoading(false)
-        return
+        setError(signUpError.message);
+        setLoading(false);
+        return;
       }
 
-      setMessage('Account created successfully! Please check your email to verify your account.')
+      setMessage(
+        "Account created successfully! Please check your email to verify your account."
+      );
       setTimeout(() => {
-        onSuccess()
-      }, 3000)
-
+        onSuccess();
+      }, 3000);
     } catch (err) {
-      setError('An unexpected error occurred')
-      console.error('Signup error:', err)
+      setError("An unexpected error occurred");
+      console.error("Signup error:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }))
-  }
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -97,7 +111,10 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Full Name
             </label>
             <input
@@ -113,7 +130,10 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <input
@@ -129,7 +149,10 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
@@ -145,7 +168,10 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Confirm Password
             </label>
             <input
@@ -170,8 +196,11 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               required
             />
-            <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-              I agree to the{' '}
+            <label
+              htmlFor="acceptTerms"
+              className="ml-2 block text-sm text-gray-900"
+            >
+              I agree to the{" "}
               <a href="/terms" className="text-blue-600 hover:text-blue-500">
                 Terms and Conditions
               </a>
@@ -195,13 +224,13 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-600">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <button
               onClick={onClose}
               className="text-blue-600 hover:text-blue-500 font-medium"
@@ -212,5 +241,5 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

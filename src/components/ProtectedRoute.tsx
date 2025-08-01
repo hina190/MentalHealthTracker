@@ -1,28 +1,30 @@
-'use client'
+"use client";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 interface ProtectedRouteProps {
-  children: React.ReactNode
-  redirectTo?: string
+  children: React.ReactNode;
+  redirectTo?: string;
 }
 
-export default function ProtectedRoute({ 
-  children, 
-  redirectTo = '/login' 
+export default function ProtectedRoute({
+  children,
+  redirectTo = "/login",
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
-  const router = useRouter()
+  const auth = useAuth();
+  const router = useRouter();
+
+  const user = auth?.user;
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push(redirectTo)
+    if (user === null) {
+      router.push(redirectTo);
     }
-  }, [user, loading, router, redirectTo])
+  }, [user, router, redirectTo]);
 
-  if (loading) {
+  if (user === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -30,12 +32,12 @@ export default function ProtectedRoute({
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
-  return <>{children}</>
-} 
+  return <>{children}</>;
+}
