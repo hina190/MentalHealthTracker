@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif' }}>
       <body>
         <AuthProvider>
           <Navbar />
