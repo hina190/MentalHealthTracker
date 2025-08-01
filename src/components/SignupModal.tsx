@@ -78,14 +78,8 @@ export default function SignupModal({ onClose, onSuccess }: SignupModalProps) {
         "Account created successfully! Please check your email to verify your account."
       );
       setTimeout(() => {
-<<<<<<< HEAD
         onSuccess();
       }, 3000);
-=======
-        onClose()
-      }, 3000)
-
->>>>>>> bc09d7bc872f01c507bf0a9ae26e352fca0f5ced
     } catch (err) {
       setError("An unexpected error occurred");
       console.error("Signup error:", err);
